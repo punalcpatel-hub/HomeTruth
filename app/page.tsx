@@ -88,6 +88,33 @@ export default function Home() {
     if (error) setMessage(error.message);
   }
 
+  async function runAddressSearch() {
+    const q = query.trim();
+    setTab('homes');
+    if (q.length < 5) {
+      setMessage('Enter a full street address, city, state and ZIP.');
+      return;
+    }
+
+    setAddressLoading(true);
+    setMessage('Searching for that address...');
+    try {
+      const response = await fetch(`/api/address-search?q=${encodeURIComponent(q)}`);
+      const data = await response.json();
+      const matches = Array.isArray(data.matches) ? data.matches as AddressMatch[] : [];
+      setAddressMatches(matches);
+      if (matches.length === 0) {
+        setMessage('No address match found. Try including street number, city, state and ZIP.');
+        return;
+      }
+      await chooseAddress(matches[0]);
+    } catch {
+      setMessage('Address search could not connect. Please try again.');
+    } finally {
+      setAddressLoading(false);
+    }
+  }
+
   async function chooseAddress(match:AddressMatch) {
     if (!user) {
       setMessage('Sign in with Google to create or open a HomeTruth property profile.');
@@ -184,7 +211,7 @@ export default function Home() {
 
   return <main>
     <nav><div className="brand">Home<span>Truth</span></div><div className="navlinks"><button onClick={()=>setTab('homes')}>Homes</button><button onClick={()=>setTab('agents')}>Realtors</button><button className="dark" onClick={()=>setAuthOpen(true)}>{user ? 'Account' : 'Sign in'}</button></div></nav>
-    <section className="hero"><div className="eyebrow">PROPERTY REPUTATION, BUILT OVER TIME</div><h1>Know the home <em>before</em><br/>you buy the home.</h1><p>Real experiences from owners, tenants, buyers and sellers—attached to the property, not just the listing.</p><div className="searchWrap"><div className="search"><span>⌕</span><input value={query} onChange={e=>{setQuery(e.target.value);setTab('homes')}} onFocus={()=>setTab('homes')} placeholder="Search a U.S. street address..."/><button onClick={()=>setTab('homes')}>Search</button></div>{(addressLoading||addressMatches.length>0)&&<div className="suggestions">{addressLoading&&<div className="suggestion muted">Searching real addresses...</div>}{addressMatches.map((m,i)=><button className="suggestion" key={`${m.address}-${i}`} onClick={()=>void chooseAddress(m)}><b>{m.address}</b><small>{m.city}, {m.state} {m.zip}</small></button>)}</div>}</div><div className="trust">✓ Real U.S. address lookup &nbsp; · &nbsp; Persistent property history &nbsp; · &nbsp; Realtor accountability</div>{message&&<div className="flash">{message}</div>}</section>
+    <section className="hero"><div className="eyebrow">PROPERTY REPUTATION, BUILT OVER TIME</div><h1>Know the home <em>before</em><br/>you buy the home.</h1><p>Real experiences from owners, tenants, buyers and sellers—attached to the property, not just the listing.</p><div className="searchWrap"><div className="search"><span>⌕</span><input value={query} onChange={e=>{setQuery(e.target.value);setTab('homes')}} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();void runAddressSearch();}}} onFocus={()=>setTab('homes')} placeholder="Search a U.S. street address..."/><button onClick={()=>void runAddressSearch()} disabled={addressLoading}>{addressLoading?'Searching...':'Search'}</button></div>{(addressLoading||addressMatches.length>0)&&<div className="suggestions">{addressLoading&&<div className="suggestion muted">Searching real addresses...</div>}{addressMatches.map((m,i)=><button className="suggestion" key={`${m.address}-${i}`} onClick={()=>void chooseAddress(m)}><b>{m.address}</b><small>{m.city}, {m.state} {m.zip}</small></button>)}</div>}</div><div className="trust">✓ Real U.S. address lookup &nbsp; · &nbsp; Persistent property history &nbsp; · &nbsp; Realtor accountability</div>{message&&<div className="flash">{message}</div>}</section>
 
     {tab==='homes' ? <section className="content"><div className="sectionHead"><div><div className="eyebrow">HOMETRUTH PROFILES</div><h2>Explore homes</h2></div><p>{properties.length} property profiles</p></div>{loading?<p>Loading properties...</p>:<>{filtered.length===0&&query.trim().length>0?<div className="notice">No HomeTruth profile yet. Choose a real-address suggestion above to create one.</div>:<div className="grid">{filtered.map(p=><article className="card" key={p.id}><div className="photo" onClick={()=>setSelected(p)}><div className="score">★ {Number(p.score).toFixed(1)}</div><div className="house">⌂</div></div><div className="cardbody"><h3 onClick={()=>setSelected(p)}>{p.address}</h3><p>{p.city}, {p.state} {p.zip}</p><div className="facts"><b>{p.beds ?? '—'}</b> beds <b>{p.baths ?? '—'}</b> baths <b>{p.sqft?.toLocaleString() ?? '—'}</b> sqft</div><p className="summary">{p.summary}</p><div className="cardActions"><button className="link" onClick={()=>setSelected(p)}>View profile →</button><button className="save" onClick={()=>void toggleSave(p.id)}>{saved.has(p.id)?'♥ Saved':'♡ Save'}</button></div></div></article>)}</div>}</>}</section>:
     <section className="content"><div className="sectionHead"><div><div className="eyebrow">PROFESSIONAL REPUTATION</div><h2>Realtor profiles</h2></div><p>{agents.length} profiles</p></div><div className="agentGrid">{agents.map(a=><article className="agent" key={a.id}><div className="avatar">{a.full_name.split(' ').map(x=>x[0]).join('')}</div><div><h3>{a.full_name}</h3><p>{a.brokerage}</p><small>{a.state} license · {a.license_number}</small></div><div className="agentScore">★ New</div></article>)}</div></section>}
