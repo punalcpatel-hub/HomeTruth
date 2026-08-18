@@ -11,6 +11,19 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     let active = true;
+    let timer: number | undefined;
+
+    function getNextPath() {
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get('next');
+      if (next && next.startsWith('/')) return next;
+      return '/';
+    }
+
+    function finishRedirect() {
+      const nextPath = getNextPath();
+      router.replace(nextPath);
+    }
 
     async function finishSignIn() {
       const { data, error } = await supabase.auth.getSession();
@@ -22,23 +35,26 @@ export default function AuthCallbackPage() {
       }
 
       if (data.session) {
-        router.replace('/');
+        finishRedirect();
         return;
       }
 
       const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
         if (!active) return;
-        if (session) router.replace('/');
+        if (session) finishRedirect();
       });
 
-      window.setTimeout(() => {
+      timer = window.setTimeout(() => {
         if (active) setMessage('Sign in was not completed. Please return home and try again.');
         listener.subscription.unsubscribe();
       }, 5000);
     }
 
     void finishSignIn();
-    return () => { active = false; };
+    return () => {
+      active = false;
+      if (timer) window.clearTimeout(timer);
+    };
   }, [router, supabase]);
 
   return <main style={{minHeight:'100vh',display:'grid',placeItems:'center',padding:24}}><p>{message}</p></main>;
