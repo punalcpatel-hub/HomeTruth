@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
@@ -9,19 +8,21 @@ type AddressMatch = { address:string; city:string; state:string; zip:string; lat
 type Property = { id:string; address:string; city:string; state:string; zip:string; score:number; summary:string };
 
 export default function SearchPage() {
-  const params = useSearchParams();
-  const q = params.get('q')?.trim() || '';
   const supabase = useMemo(() => createClient(), []);
+  const [q,setQ] = useState('');
   const [matches,setMatches] = useState<AddressMatch[]>([]);
-  const [status,setStatus] = useState(q ? 'Searching for that address...' : 'Enter an address to search.');
+  const [status,setStatus] = useState('Enter an address to search.');
   const [working,setWorking] = useState(false);
 
   useEffect(() => {
-    if (!q) return;
+    const query = new URLSearchParams(window.location.search).get('q')?.trim() || '';
+    setQ(query);
+    if (!query) return;
+    setStatus('Searching for that address...');
     let active = true;
     (async () => {
       try {
-        const response = await fetch(`/api/address-search?q=${encodeURIComponent(q)}`);
+        const response = await fetch(`/api/address-search?q=${encodeURIComponent(query)}`);
         const data = await response.json();
         if (!active) return;
         const found = Array.isArray(data.matches) ? data.matches : [];
@@ -32,7 +33,7 @@ export default function SearchPage() {
       }
     })();
     return () => { active = false; };
-  },[q]);
+  },[]);
 
   async function openProperty(match:AddressMatch) {
     setWorking(true);
