@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client';
 type Property = { id:string; address:string; city:string; state:string; zip:string; beds:number|null; baths:number|null; sqft:number|null; year_built:number|null; score:number; summary:string };
 type Agent = { id:string; full_name:string; brokerage:string|null; state:string|null; license_number:string|null };
 type Review = { id:string; property_id:string; relationship:string; overall_rating:number; review_text:string; verification_status:string; created_at:string };
-
 type SessionUser = { id:string; email?:string } | null;
 
 export default function Home() {
@@ -24,6 +23,8 @@ export default function Home() {
   const [reviewOpen,setReviewOpen] = useState(false);
   const [email,setEmail] = useState('');
   const [message,setMessage] = useState('');
+  const [authSending,setAuthSending] = useState(false);
+  const [authCooldown,setAuthCooldown] = useState(0);
 
   async function loadPublicData() {
     const [{data:p},{data:a},{data:r}] = await Promise.all([
@@ -57,13 +58,34 @@ export default function Home() {
     return () => subscription.unsubscribe();
   },[supabase]);
 
+  useEffect(() => {
+    if (authCooldown <= 0) return;
+    const timer = window.setTimeout(() => setAuthCooldown(value => Math.max(0,value-1)),1000);
+    return () => window.clearTimeout(timer);
+  },[authCooldown]);
+
   const filtered = properties.filter(p => `${p.address} ${p.city} ${p.state} ${p.zip}`.toLowerCase().includes(query.toLowerCase()));
   const selectedReviews = selected ? reviews.filter(r=>r.property_id===selected.id) : [];
 
   async function sendMagicLink(e:FormEvent) {
-    e.preventDefault(); setMessage('Sending sign-in link…');
+    e.preventDefault();
+    if (authSending || authCooldown > 0) return;
+    setAuthSending(true);
+    setMessage('Sending sign-in link…');
     const {error} = await supabase.auth.signInWithOtp({email,options:{emailRedirectTo:window.location.origin}});
-    setMessage(error ? error.message : 'Check your email for a secure sign-in link.');
+    setAuthSending(false);
+    if (error) {
+      const text = error.message.toLowerCase();
+      if (text.includes('rate limit') || text.includes('security purposes')) {
+        setAuthCooldown(60);
+        setMessage('Too many sign-in emails were requested. Please wait before trying again.');
+      } else {
+        setMessage(error.message);
+      }
+      return;
+    }
+    setAuthCooldown(60);
+    setMessage('Sign-in link sent. Check your email and use that link once.');
   }
 
   async function signOut() {
@@ -117,7 +139,7 @@ export default function Home() {
 
     {selected && <div className="modal" onClick={()=>setSelected(null)}><div className="panel" onClick={e=>e.stopPropagation()}><button className="close" onClick={()=>setSelected(null)}>×</button><div className="eyebrow">PROPERTY PROFILE</div><h2>{selected.address}</h2><p>{selected.city}, {selected.state} {selected.zip}</p><div className="bigscore">★ {Number(selected.score).toFixed(1)} <small>Home Score</small></div><div className="profileFacts"><span><b>{selected.beds}</b> beds</span><span><b>{selected.baths}</b> baths</span><span><b>{selected.sqft?.toLocaleString()}</b> sqft</span><span><b>{selected.year_built}</b> built</span></div><p>{selected.summary}</p><div className="profileButtons"><button className="darkButton" onClick={()=>setReviewOpen(true)}>Review this home</button><button className="outlineButton" onClick={()=>void toggleSave(selected.id)}>{saved.has(selected.id)?'♥ Saved':'♡ Save home'}</button></div><h3 className="reviewHeading">Resident reviews</h3>{selectedReviews.length===0?<div className="notice">No approved reviews yet. Be the first to share an experience with this property.</div>:selectedReviews.map(r=><div className="review" key={r.id}><div><b>★ {r.overall_rating}/5</b> · {r.relationship} {r.verification_status==='verified'&&<span className="verified">✓ Verified</span>}</div><p>{r.review_text}</p></div>)}</div></div>}
 
-    {authOpen && <div className="modal" onClick={()=>setAuthOpen(false)}><div className="panel small" onClick={e=>e.stopPropagation()}><button className="close" onClick={()=>setAuthOpen(false)}>×</button><div className="eyebrow">YOUR HOMETRUTH ACCOUNT</div>{user?<><h2>You’re signed in</h2><p>{user.email}</p><p>{saved.size} saved home{saved.size===1?'':'s'}</p><button className="darkButton" onClick={()=>void signOut()}>Sign out</button></>:<><h2>Sign in by email</h2><p>We’ll send you a secure magic link. No password required.</p><form onSubmit={sendMagicLink} className="authForm"><input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/><button className="darkButton" type="submit">Email me a sign-in link</button></form></>}</div></div>}
+    {authOpen && <div className="modal" onClick={()=>setAuthOpen(false)}><div className="panel small" onClick={e=>e.stopPropagation()}><button className="close" onClick={()=>setAuthOpen(false)}>×</button><div className="eyebrow">YOUR HOMETRUTH ACCOUNT</div>{user?<><h2>You’re signed in</h2><p>{user.email}</p><p>{saved.size} saved home{saved.size===1?'':'s'}</p><button className="darkButton" onClick={()=>void signOut()}>Sign out</button></>:<><h2>Sign in by email</h2><p>We’ll send you one secure magic link. No password required.</p><form onSubmit={sendMagicLink} className="authForm"><input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" disabled={authSending}/><button className="darkButton" type="submit" disabled={authSending||authCooldown>0}>{authSending?'Sending…':authCooldown>0?`Try again in ${authCooldown}s`:'Email me a sign-in link'}</button></form>{authCooldown>0&&<small>Please use the email already sent instead of requesting another link.</small>}</>}</div></div>}
 
     {reviewOpen && selected && <div className="modal" onClick={()=>setReviewOpen(false)}><div className="panel reviewPanel" onClick={e=>e.stopPropagation()}><button className="close" onClick={()=>setReviewOpen(false)}>×</button><div className="eyebrow">REVIEW THIS HOME</div><h2>{selected.address}</h2><form className="reviewForm" onSubmit={submitReview}><label>Your relationship<select name="relationship" defaultValue="Former owner"><option>Current owner</option><option>Former owner</option><option>Current tenant</option><option>Former tenant</option><option>Buyer</option><option>Seller</option><option>Visitor</option></select></label><div className="ratingGrid">{[['overall_rating','Overall'],['noise_rating','Noise'],['maintenance_rating','Maintenance'],['build_quality_rating','Build quality'],['parking_rating','Parking'],['hoa_rating','HOA']].map(([name,label])=><label key={name}>{label}<select name={name} defaultValue="5">{[5,4,3,2,1].map(n=><option key={n} value={n}>{n} / 5</option>)}</select></label>)}</div><label>What should a future buyer or renter know?<textarea name="review_text" required minLength={20} maxLength={1500} placeholder="Share specific, firsthand details about living in or dealing with this property."/></label><button className="darkButton" type="submit">Submit for moderation</button><small>Reviews are not public until approved. Verification can be added later.</small></form></div></div>}
 
