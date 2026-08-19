@@ -1,11 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 export default function AuthCallbackPage() {
-  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [message, setMessage] = useState('Finishing sign in...');
 
@@ -21,8 +19,7 @@ export default function AuthCallbackPage() {
     }
 
     function finishRedirect() {
-      const nextPath = getNextPath();
-      router.replace(nextPath);
+      window.location.replace(getNextPath());
     }
 
     async function finishSignIn() {
@@ -41,7 +38,9 @@ export default function AuthCallbackPage() {
 
       const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
         if (!active) return;
-        if (session) finishRedirect();
+        if (session) {
+          window.setTimeout(finishRedirect, 0);
+        }
       });
 
       timer = window.setTimeout(() => {
@@ -55,7 +54,7 @@ export default function AuthCallbackPage() {
       active = false;
       if (timer) window.clearTimeout(timer);
     };
-  }, [router, supabase]);
+  }, [supabase]);
 
   return <main style={{minHeight:'100vh',display:'grid',placeItems:'center',padding:24}}><p>{message}</p></main>;
 }
