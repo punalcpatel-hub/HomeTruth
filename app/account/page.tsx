@@ -1,5 +1,3 @@
-import AccountClient from './AccountClient';
-
 export default function AccountPage() {
   return <main>
     <nav>
@@ -13,8 +11,9 @@ export default function AccountPage() {
     <section className="content" style={{maxWidth:760}}>
       <div className="eyebrow">YOUR HOMETRUTH ACCOUNT</div>
       <h2 style={{font:'700 42px/1 Georgia,serif',margin:'0 0 20px'}}>Account</h2>
-      <AccountClient />
-      <small style={{display:'block',marginTop:24,opacity:.55}}>Build: account-static-nav-v1</small>
+      <p>Account navigation is now kept separate from authentication so Search always works.</p>
+      <p style={{marginTop:22}}><a href="/signin" className="darkButton" style={{display:'inline-block',textDecoration:'none'}}>Sign in with Google</a></p>
+      <small style={{display:'block',marginTop:24,opacity:.55}}>Build: static-account-v1</small>
     </section>
   </main>;
 }
