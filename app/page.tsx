@@ -39,7 +39,11 @@ export default function Home() {
   useEffect(() => {
     void loadPublicData();
     void supabase.auth.getSession().then(({data}) => { const u=data.session?.user?{id:data.session.user.id,email:data.session.user.email}:null; setUser(u); if(u) void loadSaved(u.id); });
-    const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>{const u=session?.user?{id:session.user.id,email:session.user.email}:null;setUser(u);if(u)void loadSaved(u.id);else setSaved(new Set());});
+    const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>{
+      const u=session?.user?{id:session.user.id,email:session.user.email}:null;
+      setUser(u);
+      if(u){window.setTimeout(()=>{void loadSaved(u.id);},0);}else setSaved(new Set());
+    });
     return()=>subscription.unsubscribe();
   },[supabase]);
 
