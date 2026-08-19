@@ -12,20 +12,17 @@ export async function updateSession(request: NextRequest) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet, headers) {
+      setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        if (headers) {
-          Object.entries(headers).forEach(([key, value]) => response.headers.set(key, value));
-        }
+        cookiesToSet.forEach(({ name, value, options }) => {
+          response.cookies.set(name, value, options);
+        });
       },
     },
   });
 
-  // Refresh/validate once at the request boundary so Server Components do not
-  // race each other while rotating a single-use refresh token.
+  // Validate/refresh once at the request boundary.
   await supabase.auth.getClaims();
-
   return response;
 }
