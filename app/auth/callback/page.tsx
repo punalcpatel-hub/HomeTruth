@@ -11,10 +11,15 @@ export default function AuthCallbackPage() {
     let active = true;
 
     async function finishSignIn() {
-      // Give supabase-js one event-loop turn to process OAuth tokens from the URL.
-      await new Promise(resolve => window.setTimeout(resolve, 0));
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
 
-      const { data, error } = await supabase.auth.getSession();
+      if (!code) {
+        if (active) setMessage('Sign in code was missing. Please return home and try again.');
+        return;
+      }
+
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
       if (!active) return;
 
       if (error) {
@@ -22,13 +27,7 @@ export default function AuthCallbackPage() {
         return;
       }
 
-      if (!data.session) {
-        setMessage('Sign in was not completed. Please return home and try again.');
-        return;
-      }
-
-      // Always leave the auth page with a brand-new document load.
-      window.location.href = '/';
+      window.location.replace('/');
     }
 
     void finishSignIn();
