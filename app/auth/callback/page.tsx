@@ -9,20 +9,11 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     let active = true;
-    let timer: number | undefined;
-
-    function getNextPath() {
-      const params = new URLSearchParams(window.location.search);
-      const next = params.get('next');
-      if (next && next.startsWith('/')) return next;
-      return '/';
-    }
-
-    function finishRedirect() {
-      window.location.replace(getNextPath());
-    }
 
     async function finishSignIn() {
+      // Give supabase-js one event-loop turn to process OAuth tokens from the URL.
+      await new Promise(resolve => window.setTimeout(resolve, 0));
+
       const { data, error } = await supabase.auth.getSession();
       if (!active) return;
 
@@ -31,29 +22,17 @@ export default function AuthCallbackPage() {
         return;
       }
 
-      if (data.session) {
-        finishRedirect();
+      if (!data.session) {
+        setMessage('Sign in was not completed. Please return home and try again.');
         return;
       }
 
-      const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (!active) return;
-        if (session) {
-          window.setTimeout(finishRedirect, 0);
-        }
-      });
-
-      timer = window.setTimeout(() => {
-        if (active) setMessage('Sign in was not completed. Please return home and try again.');
-        listener.subscription.unsubscribe();
-      }, 5000);
+      // Always leave the auth page with a brand-new document load.
+      window.location.href = '/';
     }
 
     void finishSignIn();
-    return () => {
-      active = false;
-      if (timer) window.clearTimeout(timer);
-    };
+    return () => { active = false; };
   }, [supabase]);
 
   return <main style={{minHeight:'100vh',display:'grid',placeItems:'center',padding:24}}><p>{message}</p></main>;
