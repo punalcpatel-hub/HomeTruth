@@ -3,7 +3,7 @@ export default function Home() {
     <nav>
       <div className="brand">Home<span>Truth</span></div>
       <div className="navlinks">
-        <a href="/search" style={{textDecoration:'none',color:'inherit',padding:'11px 15px'}}>Search</a>
+        <a href="/find-home" style={{textDecoration:'none',color:'inherit',padding:'11px 15px'}}>Search</a>
         <a href="/account" className="dark" style={{textDecoration:'none',padding:'11px 15px',display:'inline-block'}}>Account</a>
       </div>
     </nav>
@@ -13,14 +13,14 @@ export default function Home() {
       <h1>Know the home <em>before</em><br/>you buy the home.</h1>
       <p>Real experiences from owners, tenants, buyers and sellers—attached to the property, not just the listing.</p>
       <div className="searchWrap">
-        <form className="search" action="/search" method="get">
+        <form className="search" action="/find-home" method="get">
           <span>⌕</span>
-          <input name="q" placeholder="123 Main St, Phoenix, AZ 85004" autoComplete="street-address" required/>
+          <input name="q" placeholder="3797 East Mead Dr, Chandler, AZ 85249" autoComplete="street-address" required/>
           <button type="submit">Search</button>
         </form>
       </div>
-      <div className="trust">✓ Direct browser search &nbsp; · &nbsp; No client auth code &nbsp; · &nbsp; Persistent property history</div>
-      <small style={{display:'block',marginTop:10,opacity:.55}}>Build: server-only-v1</small>
+      <div className="trust">✓ Direct browser search &nbsp; · &nbsp; Auth-independent route &nbsp; · &nbsp; Persistent property history</div>
+      <small style={{display:'block',marginTop:10,opacity:.55}}>Build: clean-find-home-v1</small>
     </section>
 
     <section className="how">
