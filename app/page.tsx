@@ -1,3 +1,5 @@
+import SearchBox from './SearchBox';
+
 export default function Home() {
   return <main>
     <nav>
@@ -11,15 +13,9 @@ export default function Home() {
       <div className="eyebrow">PROPERTY REPUTATION, BUILT OVER TIME</div>
       <h1>Know the home <em>before</em><br/>you buy the home.</h1>
       <p>Real experiences from owners, tenants, buyers and sellers—attached to the property, not just the listing.</p>
-      <div className="searchWrap">
-        <form className="search" action="/search" method="get">
-          <span>⌕</span>
-          <input name="q" placeholder="Search a U.S. street address..." required/>
-          <button type="submit">Search</button>
-        </form>
-      </div>
+      <div className="searchWrap"><SearchBox /></div>
       <div className="trust">✓ Real U.S. address lookup &nbsp; · &nbsp; Persistent property history &nbsp; · &nbsp; Realtor accountability</div>
-      <small style={{display:'block',marginTop:10,opacity:.55}}>Build: static-home-v1</small>
+      <small style={{display:'block',marginTop:10,opacity:.55}}>Build: forced-search-v1</small>
     </section>
     <section className="how">
       <div className="eyebrow">WHY HOMETRUTH</div>
