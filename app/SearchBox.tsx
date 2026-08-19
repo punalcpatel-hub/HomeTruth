@@ -8,10 +8,20 @@ export default function SearchBox({ defaultValue = '' }: { defaultValue?: string
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     const value = query.trim();
     if (!value) return;
-
     event.preventDefault();
-    const url = `/search?q=${encodeURIComponent(value)}`;
-    window.location.assign(url);
+    window.location.assign(`/search?q=${encodeURIComponent(value)}`);
   }
 
-  return <form className="search" action="/search" method
+  return <form className="search" action="/search" method="get" onSubmit={submitSearch}>
+    <span>⌕</span>
+    <input
+      name="q"
+      value={query}
+      onChange={(event) => setQuery(event.target.value)}
+      placeholder="Search a U.S. street address..."
+      autoComplete="street-address"
+      required
+    />
+    <button type="submit">Search</button>
+  </form>;
+}
