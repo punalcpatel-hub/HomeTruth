@@ -1,5 +1,5 @@
 export type PropertyLookup = {
-  source: 'rentcast' | 'attom' | 'regrid' | 'census';
+  source: 'rentcast' | 'attom' | 'regrid' | 'census' | 'typed';
   address: string;
   city: string;
   state: string;
@@ -25,26 +25,22 @@ function splitAddress(input: string) {
   return { address, city, state: match[1].toUpperCase(), zip: match[2] };
 }
 
+function timeoutSignal(ms = 2500) {
+  return AbortSignal.timeout(ms);
+}
+
 async function rentCastLookup(fullAddress: string): Promise<PropertyLookup | null> {
   const key = process.env.RENTCAST_API_KEY;
   if (!key) return null;
   const url = new URL('https://api.rentcast.io/v1/properties');
   url.searchParams.set('address', fullAddress);
   url.searchParams.set('limit', '1');
-  const response = await fetch(url, { headers: { 'X-Api-Key': key, Accept: 'application/json' }, cache: 'no-store' });
+  const response = await fetch(url, { headers: { 'X-Api-Key': key, Accept: 'application/json' }, cache: 'no-store', signal: timeoutSignal() });
   if (!response.ok) return null;
   const data = await response.json();
   const p = Array.isArray(data) ? data[0] : null;
   if (!p) return null;
-  return {
-    source: 'rentcast',
-    address: p.addressLine1 || p.formattedAddress?.split(',')[0] || fullAddress,
-    city: p.city || '', state: p.state || '', zip: p.zipCode || '',
-    latitude: p.latitude, longitude: p.longitude,
-    beds: p.bedrooms, baths: p.bathrooms, sqft: p.squareFootage,
-    yearBuilt: p.yearBuilt, propertyType: p.propertyType,
-    parcelNumber: p.assessorID || p.id,
-  };
+  return { source:'rentcast', address:p.addressLine1||p.formattedAddress?.split(',')[0]||fullAddress, city:p.city||'', state:p.state||'', zip:p.zipCode||'', latitude:p.latitude, longitude:p.longitude, beds:p.bedrooms, baths:p.bathrooms, sqft:p.squareFootage, yearBuilt:p.yearBuilt, propertyType:p.propertyType, parcelNumber:p.assessorID||p.id };
 }
 
 async function attomLookup(fullAddress: string): Promise<PropertyLookup | null> {
@@ -52,92 +48,42 @@ async function attomLookup(fullAddress: string): Promise<PropertyLookup | null> 
   if (!key) return null;
   const url = new URL('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/basicprofile');
   url.searchParams.set('address', fullAddress);
-  const response = await fetch(url, { headers: { apikey: key, Accept: 'application/json' }, cache: 'no-store' });
+  const response = await fetch(url, { headers: { apikey:key, Accept:'application/json' }, cache:'no-store', signal:timeoutSignal() });
   if (!response.ok) return null;
   const data = await response.json();
   const p = data?.property?.[0];
   if (!p) return null;
-  const parsed = splitAddress(fullAddress);
-  return {
-    source: 'attom',
-    address: p.address?.line1 || parsed?.address || fullAddress,
-    city: p.address?.locality || parsed?.city || '',
-    state: p.address?.countrySubd || parsed?.state || '',
-    zip: p.address?.postal1 || parsed?.zip || '',
-    latitude: Number(p.location?.latitude) || undefined,
-    longitude: Number(p.location?.longitude) || undefined,
-    beds: Number(p.building?.rooms?.beds) || undefined,
-    baths: Number(p.building?.rooms?.bathstotal) || undefined,
-    sqft: Number(p.building?.size?.livingsize) || undefined,
-    yearBuilt: Number(p.summary?.yearbuilt) || undefined,
-    propertyType: p.summary?.proptype,
-    parcelNumber: p.identifier?.apn,
-  };
+  const parsed=splitAddress(fullAddress);
+  return { source:'attom', address:p.address?.line1||parsed?.address||fullAddress, city:p.address?.locality||parsed?.city||'', state:p.address?.countrySubd||parsed?.state||'', zip:p.address?.postal1||parsed?.zip||'', latitude:Number(p.location?.latitude)||undefined, longitude:Number(p.location?.longitude)||undefined, beds:Number(p.building?.rooms?.beds)||undefined, baths:Number(p.building?.rooms?.bathstotal)||undefined, sqft:Number(p.building?.size?.livingsize)||undefined, yearBuilt:Number(p.summary?.yearbuilt)||undefined, propertyType:p.summary?.proptype, parcelNumber:p.identifier?.apn };
 }
 
 async function regridLookup(fullAddress: string): Promise<PropertyLookup | null> {
-  const token = process.env.REGRID_API_TOKEN;
-  if (!token) return null;
-  const url = new URL('https://app.regrid.com/api/v2/parcels/address');
-  url.searchParams.set('query', fullAddress);
-  url.searchParams.set('limit', '1');
-  url.searchParams.set('token', token);
-  const response = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store' });
-  if (!response.ok) return null;
-  const data = await response.json();
-  const feature = data?.parcels?.features?.[0];
-  if (!feature) return null;
-  const p = feature.properties || {};
-  const parsed = splitAddress(fullAddress);
-  const center = feature.geometry?.type === 'Point' ? feature.geometry.coordinates : null;
-  return {
-    source: 'regrid',
-    address: p.address || p.saddress || parsed?.address || fullAddress,
-    city: p.scity || p.city || parsed?.city || '',
-    state: p.state2 || parsed?.state || '',
-    zip: p.szip || parsed?.zip || '',
-    latitude: center?.[1], longitude: center?.[0],
-    yearBuilt: Number(p.yearbuilt) || undefined,
-    parcelNumber: p.parcelnumb || p.ll_uuid,
-    propertyType: p.usedesc || p.usecode,
-  };
+  const token=process.env.REGRID_API_TOKEN;
+  if(!token)return null;
+  const url=new URL('https://app.regrid.com/api/v2/parcels/address');
+  url.searchParams.set('query',fullAddress); url.searchParams.set('limit','1'); url.searchParams.set('token',token);
+  const response=await fetch(url,{headers:{Accept:'application/json'},cache:'no-store',signal:timeoutSignal()});
+  if(!response.ok)return null;
+  const data=await response.json(); const feature=data?.parcels?.features?.[0]; if(!feature)return null;
+  const p=feature.properties||{}; const parsed=splitAddress(fullAddress); const center=feature.geometry?.type==='Point'?feature.geometry.coordinates:null;
+  return {source:'regrid',address:p.address||p.saddress||parsed?.address||fullAddress,city:p.scity||p.city||parsed?.city||'',state:p.state2||parsed?.state||'',zip:p.szip||parsed?.zip||'',latitude:center?.[1],longitude:center?.[0],yearBuilt:Number(p.yearbuilt)||undefined,parcelNumber:p.parcelnumb||p.ll_uuid,propertyType:p.usedesc||p.usecode};
 }
 
-async function censusLookup(fullAddress: string): Promise<PropertyLookup | null> {
-  const parsed = splitAddress(fullAddress);
-  if (!parsed) return null;
-  const url = new URL('https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress');
-  url.searchParams.set('address', fullAddress);
-  url.searchParams.set('benchmark', 'Public_AR_Current');
-  url.searchParams.set('vintage', 'Current_Current');
-  url.searchParams.set('format', 'json');
-  const response = await fetch(url, { cache: 'no-store' });
-  if (!response.ok) return null;
-  const data = await response.json();
-  const match = data?.result?.addressMatches?.[0];
-  if (!match) return null;
-  return {
-    source: 'census',
-    address: match.addressComponents?.fromAddress && match.addressComponents?.streetName
-      ? `${match.addressComponents.fromAddress} ${match.addressComponents.preType || ''} ${match.addressComponents.streetName} ${match.addressComponents.suffixType || ''}`.replace(/\s+/g, ' ').trim()
-      : parsed.address,
-    city: match.addressComponents?.city || parsed.city,
-    state: match.addressComponents?.state || parsed.state,
-    zip: match.addressComponents?.zip || parsed.zip,
-    latitude: match.coordinates?.y,
-    longitude: match.coordinates?.x,
-  };
+async function censusLookup(fullAddress:string):Promise<PropertyLookup|null>{
+  const parsed=splitAddress(fullAddress); if(!parsed)return null;
+  const url=new URL('https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress');
+  url.searchParams.set('address',fullAddress); url.searchParams.set('benchmark','Public_AR_Current'); url.searchParams.set('vintage','Current_Current'); url.searchParams.set('format','json');
+  const response=await fetch(url,{cache:'no-store',signal:timeoutSignal(3000)}); if(!response.ok)return null;
+  const data=await response.json(); const match=data?.result?.addressMatches?.[0]; if(!match)return null;
+  return {source:'census',address:parsed.address,city:match.addressComponents?.city||parsed.city,state:match.addressComponents?.state||parsed.state,zip:match.addressComponents?.zip||parsed.zip,latitude:match.coordinates?.y,longitude:match.coordinates?.x};
 }
 
-export async function lookupProperty(fullAddress: string): Promise<PropertyLookup | null> {
-  const providers = [rentCastLookup, attomLookup, regridLookup, censusLookup];
-  for (const provider of providers) {
-    try {
-      const result = await provider(fullAddress);
-      if (result) return result;
-    } catch {
-      // Try the next provider. Search should degrade gracefully instead of failing.
-    }
+export async function lookupProperty(fullAddress:string):Promise<PropertyLookup|null>{
+  const parsed=splitAddress(fullAddress); if(!parsed)return null;
+  const providers=[rentCastLookup,attomLookup,regridLookup,censusLookup];
+  for(const provider of providers){
+    try{const result=await provider(fullAddress);if(result)return result;}catch{/* timed out or unavailable; continue */}
   }
-  return null;
+  // Never leave Search hanging or blank just because an external provider failed.
+  return {source:'typed',...parsed};
 }
