@@ -1,7 +1,10 @@
 import HomeClient from './HomeClient';
 
 export default function Home() {
-  return <HomeClient>
+  return <main>
+    <nav>
+      <div className="brand">Home<span>Truth</span></div>
+    </nav>
     <section className="hero">
       <div className="eyebrow">PROPERTY REPUTATION, BUILT OVER TIME</div>
       <h1>Know the home <em>before</em><br/>you buy the home.</h1>
@@ -15,5 +18,6 @@ export default function Home() {
       </div>
       <div className="trust">✓ Real U.S. address lookup &nbsp; · &nbsp; Persistent property history &nbsp; · &nbsp; Realtor accountability</div>
     </section>
-  </HomeClient>;
+    <HomeClient />
+  </main>;
 }
