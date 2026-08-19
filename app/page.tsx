@@ -16,7 +16,11 @@ export default function Home() {
           <button type="submit">Search</button>
         </form>
       </div>
+      <p style={{marginTop:12}}>
+        <a href="/search" className="darkButton" style={{display:'inline-block',textDecoration:'none'}}>Open search page</a>
+      </p>
       <div className="trust">✓ Real U.S. address lookup &nbsp; · &nbsp; Persistent property history &nbsp; · &nbsp; Realtor accountability</div>
+      <small style={{display:'block',marginTop:10,opacity:.55}}>Build: direct-search-v1</small>
     </section>
     <HomeClient />
   </main>;
