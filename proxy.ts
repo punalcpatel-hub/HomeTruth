@@ -6,7 +6,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Keep /search completely outside Supabase auth processing. Auth refreshes
-  // everywhere else so a signed-in session stays healthy without touching search.
-  matcher: ['/((?!search(?:/|$)|_next/static|_next/image|favicon.ico).*)'],
+  // Authentication exists only inside /account. Home and Search never execute
+  // Supabase middleware, so signed-in state cannot alter public navigation.
+  matcher: ['/account/:path*'],
 };
