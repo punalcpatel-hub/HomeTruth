@@ -14,7 +14,7 @@ export default async function AccountPage() {
       <a href="/" className="brand" style={{textDecoration:'none',color:'inherit'}}>Home<span>Truth</span></a>
       <div className="navlinks">
         <a href="/" style={{textDecoration:'none',color:'inherit',padding:'11px 15px'}}>Home</a>
-        <a href="/#home-search" className="dark" style={{textDecoration:'none',padding:'11px 15px',display:'inline-block'}}>Search</a>
+        <a href="/account/search" className="dark" style={{textDecoration:'none',padding:'11px 15px',display:'inline-block'}}>Search</a>
       </div>
     </nav>
     <section className="content" style={{maxWidth:760}}>
@@ -24,14 +24,14 @@ export default async function AccountPage() {
         <div className="notice">Signed in with Google</div>
         {email && <p style={{fontSize:18,marginTop:22}}>{email}</p>}
         <div style={{display:'flex',gap:12,flexWrap:'wrap',marginTop:22}}>
-          <a href="/#home-search" className="darkButton" style={{display:'inline-block',textDecoration:'none'}}>Search homes</a>
+          <a href="/account/search" className="darkButton" style={{display:'inline-block',textDecoration:'none'}}>Search homes</a>
           <form action="/account/auth/signout" method="post" style={{margin:0}}><button type="submit" className="outlineButton">Sign out</button></form>
         </div>
       </> : <>
         <p>You are not signed in. Sign in with Google to use account features.</p>
         <p style={{marginTop:22}}><a href="/signin" className="darkButton" style={{display:'inline-block',textDecoration:'none'}}>Sign in with Google</a></p>
       </>}
-      <small style={{display:'block',marginTop:24,opacity:.55}}>Build: homepage-search-v1</small>
+      <small style={{display:'block',marginTop:24,opacity:.55}}>Build: account-search-v1</small>
     </section>
   </main>;
 }
