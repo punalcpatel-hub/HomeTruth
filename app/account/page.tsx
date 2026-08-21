@@ -28,8 +28,11 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   return <main>
     <nav>
       <a href="/" className="brand" style={{textDecoration:'none',color:'inherit'}}>Home<span>Truth</span></a>
-      <div className="navlinks">
-        <a href="/account?mode=search" className={mode === 'search' ? 'dark' : ''} style={{textDecoration:'none',color:'inherit',padding:'11px 15px',display:'inline-block'}}>Search</a>
+      <div className="navlinks" style={{display:'flex',alignItems:'center',gap:4}}>
+        <form action="/account" method="get" style={{margin:0}}>
+          <input type="hidden" name="mode" value="search" />
+          <button type="submit" className={mode === 'search' ? 'dark' : ''} style={{border:0,background:mode === 'search' ? undefined : 'transparent',cursor:'pointer',padding:'11px 15px',font:'inherit'}}>Search</button>
+        </form>
         <a href="/account" style={{textDecoration:'none',color:'inherit',padding:'11px 15px'}}>Account</a>
       </div>
     </nav>
@@ -68,7 +71,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         </>}
       </>}
 
-      <small style={{display:'block',marginTop:24,opacity:.55}}>Build: search-mode-v1</small>
+      <small style={{display:'block',marginTop:24,opacity:.55}}>Build: native-search-tab-v1</small>
     </section>
   </main>;
 }
