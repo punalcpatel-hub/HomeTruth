@@ -60,9 +60,9 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </article>}
         </div>
 
-        <form action="/account/auth/signout" method="post" style={{marginTop:28}}>
-          <button type="submit" className="outlineButton">Sign out</button>
-        </form>
+        <p style={{marginTop:28}}>
+          <a href="/account/auth/signout" className="outlineButton" style={{display:'inline-block',textDecoration:'none'}}>Sign out</a>
+        </p>
       </> : <>
         <p>You are not signed in.</p>
         <p style={{marginTop:22}}>
@@ -70,7 +70,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         </p>
       </>}
 
-      <small style={{display:'block',marginTop:24,opacity:.55}}>Build: auth-token-cookie-v1</small>
+      <small style={{display:'block',marginTop:24,opacity:.55}}>Build: get-signout-v1</small>
     </section>
   </main>;
 }
