@@ -15,12 +15,13 @@ function parseAddress(input: string): ParsedAddress | null {
   return { address, city, state: match[1].toUpperCase(), zip: match[2] };
 }
 
-export default async function AccountPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+export default async function AccountPage({ searchParams }: { searchParams: Promise<{ q?: string; mode?: string }> }) {
   const cookieStore = await cookies();
   const isSignedIn = cookieStore.getAll().some((cookie) =>
     cookie.name.startsWith('sb-') && cookie.name.includes('auth-token') && cookie.value.length > 20
   );
   const params = await searchParams;
+  const mode = params.mode === 'search' ? 'search' : 'account';
   const q = typeof params.q === 'string' ? params.q.trim() : '';
   const property = q ? parseAddress(q) : null;
 
@@ -28,26 +29,17 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     <nav>
       <a href="/" className="brand" style={{textDecoration:'none',color:'inherit'}}>Home<span>Truth</span></a>
       <div className="navlinks">
-        <a href="#account-search" style={{textDecoration:'none',color:'inherit',padding:'11px 15px'}}>Search</a>
-        <a href="/" style={{textDecoration:'none',color:'inherit',padding:'11px 15px'}}>Home</a>
+        <a href="/account?mode=search" className={mode === 'search' ? 'dark' : ''} style={{textDecoration:'none',color:'inherit',padding:'11px 15px',display:'inline-block'}}>Search</a>
+        <a href="/account" style={{textDecoration:'none',color:'inherit',padding:'11px 15px'}}>Account</a>
       </div>
     </nav>
 
     <section className="content" style={{maxWidth:900}}>
-      <div className="eyebrow">YOUR HOMETRUTH ACCOUNT</div>
-      <h2 style={{font:'700 42px/1 Georgia,serif',margin:'0 0 20px'}}>Account</h2>
-
-      {isSignedIn ? <>
-        <div className="notice">Signed in with Google</div>
-        <p style={{marginTop:18}}><a href="/account/auth/signout" className="outlineButton" style={{display:'inline-block',textDecoration:'none'}}>Sign out</a></p>
-      </> : <>
-        <div className="notice">You are not signed in.</div>
-        <p style={{marginTop:18}}><a href="/account/auth/google" className="darkButton" style={{display:'inline-block',textDecoration:'none'}}>Sign in with Google</a></p>
-      </>}
-
-      <div id="account-search" style={{marginTop:36}}>
+      {mode === 'search' ? <>
         <div className="eyebrow">SEARCH HOMES</div>
+        <h2 style={{font:'700 42px/1 Georgia,serif',margin:'0 0 20px'}}>Search any U.S. home</h2>
         <form action="/account" method="get" className="search" style={{maxWidth:'100%',marginBottom:24}}>
+          <input type="hidden" name="mode" value="search" />
           <span>⌕</span>
           <input name="q" defaultValue={q} placeholder="3797 East Mead Dr, Chandler, AZ 85249" autoComplete="street-address" required/>
           <button type="submit">Search</button>
@@ -63,9 +55,20 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </div>
           <div className="agentScore">Found</div>
         </article>}
-      </div>
+      </> : <>
+        <div className="eyebrow">YOUR HOMETRUTH ACCOUNT</div>
+        <h2 style={{font:'700 42px/1 Georgia,serif',margin:'0 0 20px'}}>Account</h2>
 
-      <small style={{display:'block',marginTop:24,opacity:.55}}>Build: auth-search-decoupled-v1</small>
+        {isSignedIn ? <>
+          <div className="notice">Signed in with Google</div>
+          <p style={{marginTop:18}}><a href="/account/auth/signout" className="outlineButton" style={{display:'inline-block',textDecoration:'none'}}>Sign out</a></p>
+        </> : <>
+          <div className="notice">You are not signed in.</div>
+          <p style={{marginTop:18}}><a href="/account/auth/google" className="darkButton" style={{display:'inline-block',textDecoration:'none'}}>Sign in with Google</a></p>
+        </>}
+      </>}
+
+      <small style={{display:'block',marginTop:24,opacity:.55}}>Build: search-mode-v1</small>
     </section>
   </main>;
 }
