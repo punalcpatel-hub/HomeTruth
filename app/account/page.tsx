@@ -1,3 +1,5 @@
+import { cookies } from 'next/headers';
+
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -14,6 +16,8 @@ function parseAddress(input: string): ParsedAddress | null {
 }
 
 export default async function AccountPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const cookieStore = await cookies();
+  const isSignedIn = cookieStore.getAll().some((cookie) => cookie.name.startsWith('sb-') && cookie.value.length > 20);
   const params = await searchParams;
   const q = typeof params.q === 'string' ? params.q.trim() : '';
   const property = q ? parseAddress(q) : null;
@@ -23,40 +27,48 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       <a href="/" className="brand" style={{textDecoration:'none',color:'inherit'}}>Home<span>Truth</span></a>
       <div className="navlinks">
         <a href="/" style={{textDecoration:'none',color:'inherit',padding:'11px 15px'}}>Home</a>
-        <a href="#account-search" className="dark" style={{textDecoration:'none',padding:'11px 15px',display:'inline-block'}}>Search</a>
+        {isSignedIn && <a href="#account-search" className="dark" style={{textDecoration:'none',padding:'11px 15px',display:'inline-block'}}>Search</a>}
       </div>
     </nav>
 
     <section className="content" style={{maxWidth:900}}>
       <div className="eyebrow">YOUR HOMETRUTH ACCOUNT</div>
       <h2 style={{font:'700 42px/1 Georgia,serif',margin:'0 0 20px'}}>Account</h2>
-      <div className="notice">Google account session active</div>
 
-      <div id="account-search" style={{marginTop:32}}>
-        <div className="eyebrow">SEARCH HOMES</div>
-        <form action="/account" method="get" className="search" style={{maxWidth:'100%',marginBottom:24}}>
-          <span>⌕</span>
-          <input name="q" defaultValue={q} placeholder="3797 East Mead Dr, Chandler, AZ 85249" autoComplete="street-address" required/>
-          <button type="submit">Search</button>
+      {isSignedIn ? <>
+        <div className="notice">Signed in with Google</div>
+
+        <div id="account-search" style={{marginTop:32}}>
+          <div className="eyebrow">SEARCH HOMES</div>
+          <form action="/account" method="get" className="search" style={{maxWidth:'100%',marginBottom:24}}>
+            <span>⌕</span>
+            <input name="q" defaultValue={q} placeholder="3797 East Mead Dr, Chandler, AZ 85249" autoComplete="street-address" required/>
+            <button type="submit">Search</button>
+          </form>
+
+          {!q && <div className="notice">Enter a complete U.S. street address.</div>}
+          {q && !property && <div className="notice">Search received. Please include street, city, state and ZIP.</div>}
+          {property && <article className="agent" style={{marginTop:20}}>
+            <div>
+              <h3>{property.address}</h3>
+              <p>{property.city}, {property.state} {property.zip}</p>
+              <p>HomeTruth search responded without contacting Supabase.</p>
+            </div>
+            <div className="agentScore">Found</div>
+          </article>}
+        </div>
+
+        <form action="/account/auth/signout" method="post" style={{marginTop:28}}>
+          <button type="submit" className="outlineButton">Sign out</button>
         </form>
+      </> : <>
+        <p>You are not signed in.</p>
+        <p style={{marginTop:22}}>
+          <a href="/account/auth/google" className="darkButton" style={{display:'inline-block',textDecoration:'none'}}>Sign in with Google</a>
+        </p>
+      </>}
 
-        {!q && <div className="notice">Enter a complete U.S. street address.</div>}
-        {q && !property && <div className="notice">Search received. Please include street, city, state and ZIP.</div>}
-        {property && <article className="agent" style={{marginTop:20}}>
-          <div>
-            <h3>{property.address}</h3>
-            <p>{property.city}, {property.state} {property.zip}</p>
-            <p>HomeTruth search responded without contacting Supabase.</p>
-          </div>
-          <div className="agentScore">Found</div>
-        </article>}
-      </div>
-
-      <form action="/account/auth/signout" method="post" style={{marginTop:28}}>
-        <button type="submit" className="outlineButton">Sign out</button>
-      </form>
-
-      <small style={{display:'block',marginTop:24,opacity:.55}}>Build: no-auth-search-v1</small>
+      <small style={{display:'block',marginTop:24,opacity:.55}}>Build: cookie-auth-search-v1</small>
     </section>
   </main>;
 }
