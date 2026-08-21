@@ -17,7 +17,9 @@ function parseAddress(input: string): ParsedAddress | null {
 
 export default async function AccountPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const cookieStore = await cookies();
-  const isSignedIn = cookieStore.getAll().some((cookie) => cookie.name.startsWith('sb-') && cookie.value.length > 20);
+  const isSignedIn = cookieStore.getAll().some((cookie) =>
+    cookie.name.startsWith('sb-') && cookie.name.includes('auth-token') && cookie.value.length > 20
+  );
   const params = await searchParams;
   const q = typeof params.q === 'string' ? params.q.trim() : '';
   const property = q ? parseAddress(q) : null;
@@ -68,7 +70,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         </p>
       </>}
 
-      <small style={{display:'block',marginTop:24,opacity:.55}}>Build: cookie-auth-search-v1</small>
+      <small style={{display:'block',marginTop:24,opacity:.55}}>Build: auth-token-cookie-v1</small>
     </section>
   </main>;
 }
