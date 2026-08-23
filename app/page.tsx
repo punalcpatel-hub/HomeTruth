@@ -1,3 +1,5 @@
+import PropertySearch from './components/PropertySearch';
+
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -31,13 +33,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ q
     <section className="hero" id="home-search">
       <div className="eyebrow">PROPERTY REPUTATION, BUILT OVER TIME</div>
       <h1>Know the home <em>before</em><br/>you buy the home.</h1>
-      <p>Search directly on this page. No separate Search route, auth middleware, or client-side handler is involved.</p>
-      <div className="searchWrap">
-        <form className="search" action="/" method="get">
-          <span>⌕</span>
-          <input name="q" defaultValue={q} placeholder="3797 East Mead Dr, Chandler, AZ 85249" autoComplete="street-address" required/>
-          <button type="submit">Search</button>
-        </form>
+      <p>Search a U.S. street address.</p>
+      <div className="searchWrap" style={{position:'relative',zIndex:50}}>
+        <PropertySearch initialQuery={q} />
       </div>
 
       {q && !property && <div className="notice">Search received. Please enter street, city, state and ZIP.</div>}
@@ -46,8 +44,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ q
         <div className="agentScore">Found</div>
       </article>}
 
-      <div className="trust">✓ Native browser GET &nbsp; · &nbsp; Same-page result &nbsp; · &nbsp; No Search middleware</div>
-      <small style={{display:'block',marginTop:10,opacity:.55}}>Build: homepage-search-v1 · {commit}</small>
+      <div className="trust">✓ Direct browser navigation &nbsp; · &nbsp; Search isolated from account auth</div>
+      <small style={{display:'block',marginTop:10,opacity:.55}}>Build: direct-navigation-search-v1 · {commit}</small>
     </section>
 
     <section className="how">
