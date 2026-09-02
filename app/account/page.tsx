@@ -3,6 +3,9 @@ import { cookies } from 'next/headers';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+const HOME = 'https://home-truth-pearl.vercel.app/';
+const SEARCH = 'https://home-truth-pearl.vercel.app/#home-search';
+
 export default async function AccountPage() {
   const cookieStore = await cookies();
   const isSignedIn = cookieStore.getAll().some((cookie) =>
@@ -11,9 +14,9 @@ export default async function AccountPage() {
 
   return <main>
     <nav>
-      <a href="/" className="brand" style={{textDecoration:'none',color:'inherit'}}>Home<span>Truth</span></a>
+      <a href={HOME} className="brand" style={{textDecoration:'none',color:'inherit'}}>Home<span>Truth</span></a>
       <div className="navlinks">
-        <a href="/#home-search" className="dark" style={{textDecoration:'none',padding:'11px 15px',display:'inline-block'}}>Search</a>
+        <a href={SEARCH} className="dark" style={{textDecoration:'none',padding:'11px 15px',display:'inline-block'}}>Search Homes</a>
         <a href="/account" style={{textDecoration:'none',color:'inherit',padding:'11px 15px'}}>Account</a>
       </div>
     </nav>
@@ -32,11 +35,11 @@ export default async function AccountPage() {
 
       <div style={{marginTop:34,paddingTop:28,borderTop:'1px solid #d9d5ca'}}>
         <div className="eyebrow">PROPERTY SEARCH</div>
-        <p>Search is kept outside the authenticated Account path so your Google session can never interfere with address searches.</p>
-        <p style={{marginTop:18}}><a href="/#home-search" className="darkButton" style={{display:'inline-block',textDecoration:'none'}}>Search homes</a></p>
+        <p>Property search opens the public HomeTruth search page directly.</p>
+        <p style={{marginTop:18}}><a href={SEARCH} className="darkButton" style={{display:'inline-block',textDecoration:'none'}}>Open Search Homes</a></p>
       </div>
 
-      <small style={{display:'block',marginTop:24,opacity:.55}}>Build: cookie-isolated-search-v1</small>
+      <small style={{display:'block',marginTop:24,opacity:.55}}>Build: absolute-search-link-v1</small>
     </section>
   </main>;
 }
